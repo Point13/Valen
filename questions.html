@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine's Game 💫</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #f5c842;
+      --gold-light: #ffe787;
+      --blue-glow: #4fc3f7;
+      --deep-space: #020918;
+      --card-bg: rgba(5, 15, 40, 0.85);
+      --text-primary: #e8f4fd;
+      --text-secondary: #a8d4f0;
+    }
+
+    html, body { width:100%; height:100%; overflow:hidden; background:var(--deep-space); font-family:'Quicksand',sans-serif; }
+
+    .bg {
+      position:fixed; inset:0;
+      background:url('Background.png') center center/cover no-repeat;
+      animation: slowPan 30s ease-in-out infinite alternate;
+    }
+    @keyframes slowPan {
+      from { transform: scale(1.05) translate(0,0); }
+      to   { transform: scale(1.05) translate(-2%,-1%); }
+    }
+
+    .stars-overlay { position:fixed; inset:0; pointer-events:none; z-index:1; }
+    .star { position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; animation:twinkle var(--dur,3s) ease-in-out infinite; animation-delay:var(--delay,0s); }
+    @keyframes twinkle { 0%,100%{opacity:.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
+
+    .scene { position:fixed; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(79,195,247,0.25);
+      border-radius: 28px;
+      padding: 44px 44px 40px;
+      max-width: 480px; width: 90%;
+      text-align: center;
+      backdrop-filter: blur(24px);
+      box-shadow:
+        0 0 60px rgba(79,195,247,.12),
+        0 0 120px rgba(79,195,247,.06),
+        inset 0 1px 0 rgba(255,255,255,.07);
+      animation: floatCard 6s ease-in-out infinite;
+      position: relative;
+    }
+    @keyframes floatCard { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-10px)} }
+
+    /* Progress bar */
+    .progress-wrap {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #f472b6, var(--gold));
+      transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    }
+
+    .question-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #f472b6;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .question-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(1.7rem, 4.5vw, 2.3rem);
+      color: var(--gold-light);
+      line-height: 1.35;
+      text-shadow: 0 0 20px rgba(245,200,66,.5), 0 0 40px rgba(245,200,66,.2);
+      margin-bottom: 36px;
+      min-height: 80px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .btn-group { display:flex; gap:18px; justify-content:center; }
+
+    .btn {
+      padding: 14px 44px;
+      border-radius: 50px; border:none; cursor:pointer;
+      font-family:'Quicksand',sans-serif; font-size:1.1rem; font-weight:700;
+      letter-spacing:.04em; transition: all .25s ease;
+      position:relative; overflow:hidden;
+    }
+    .btn::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,.15); opacity:0; transition:opacity .2s; }
+    .btn:hover::after { opacity:1; }
+
+    .btn-yes {
+      background: linear-gradient(135deg,#f472b6,#ec4899);
+      color:#fff;
+      box-shadow: 0 4px 24px rgba(236,72,153,.5), 0 0 40px rgba(236,72,153,.2);
+    }
+    .btn-yes:hover { transform:scale(1.06); box-shadow:0 6px 32px rgba(236,72,153,.7),0 0 60px rgba(236,72,153,.3); }
+
+    .btn-no {
+      background: rgba(255,255,255,.08);
+      color: var(--text-secondary);
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+      position: fixed;
+      z-index: 99;
+    }
+
+    /* Card enter animation */
+    .card.entering {
+      animation: cardEnter 0.5s cubic-bezier(.4,0,.2,1) forwards, floatCard 6s ease-in-out infinite 0.5s;
+    }
+    @keyframes cardEnter {
+      from { opacity:0; transform:scale(.92) translateY(20px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+
+    .toast {
+      position:fixed; bottom:60px; left:50%; transform:translateX(-50%);
+      background: rgba(5,15,40,.95);
+      border: 1px solid rgba(245,200,66,.3);
+      color: var(--gold-light);
+      font-family:'Dancing Script',cursive; font-size:1.2rem;
+      padding:16px 28px; border-radius:16px; max-width:360px;
+      text-align:center; box-shadow:0 0 30px rgba(245,200,66,.2);
+      z-index:200; opacity:0; transition:opacity .5s; pointer-events:none;
+    }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="stars-overlay" id="starsOverlay"></div>
+
+<div class="scene">
+  <div class="card entering" id="card">
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="question-label" id="qLabel">Question 1 of 4</div>
+    <div class="question-text" id="qText"></div>
+    <div class="btn-group">
+      <button class="btn btn-yes" id="yesBtn" onclick="answerYes()">Yes 💕</button>
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-no" id="noBtn" onclick="noClick()">No</button>
+<div class="toast" id="toast"></div>
+
+<script>
+  // Stars
+  const overlay = document.getElementById('starsOverlay');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div'); s.className='star';
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s`;
+    overlay.appendChild(s);
+  }
+
+  const questions = [
+    "Do you like talking to me? 🌙",
+    "Are you pretty hot? 🥵",
+    "Do you wanna play the game with me? 🎮✨",
+    "Am I a good person? 🥹"
+  ];
+
+  let current = 0;
+  let noAttempts = 0;
+  let toastShown = false;
+
+  const noBtn = document.getElementById('noBtn');
+  const qText = document.getElementById('qText');
+  const qLabel = document.getElementById('qLabel');
+  const progressBar = document.getElementById('progressBar');
+
+  function showQuestion(idx) {
+    qText.textContent = questions[idx];
+    qLabel.textContent = `Question ${idx+1} of ${questions.length}`;
+    progressBar.style.width = ((idx) / questions.length * 100) + '%';
+    noAttempts = 0;
+    toastShown = false;
+    noBtn.style.display = 'block';
+    // Place no near center-right initially
+    placeNoInit();
+  }
+
+  function placeNoInit() {
+    noBtn.style.transition = 'none';
+    noBtn.style.left = (window.innerWidth/2 + 70) + 'px';
+    noBtn.style.top  = (window.innerHeight/2 + 60) + 'px';
+  }
+
+  function placeNoRandom() {
+    const margin = 60;
+    const bw = noBtn.offsetWidth || 100;
+    const bh = noBtn.offsetHeight || 44;
+    let x, y, tries = 0;
+    do {
+      x = margin + Math.random()*(window.innerWidth  - bw - margin*2);
+      y = margin + Math.random()*(window.innerHeight - bh - margin*2);
+      tries++;
+    } while(tries < 20 && Math.abs(x - window.innerWidth/2) < 120 && Math.abs(y - window.innerHeight/2) < 120);
+    noBtn.style.transition = 'none';
+    noBtn.style.left = x+'px';
+    noBtn.style.top  = y+'px';
+  }
+
+  // Desktop: flee on hover
+  noBtn.addEventListener('mouseover', () => { if(!toastShown) placeNoRandom(); });
+
+  // Mobile: track finger proximity and flee before touch lands
+  document.addEventListener('touchmove', (e) => {
+    if(toastShown) return;
+    const touch = e.touches[0];
+    const rect  = noBtn.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    if(Math.hypot(touch.clientX - cx, touch.clientY - cy) < 90) placeNoRandom();
+  }, { passive: true });
+
+  // touchstart fallback: counts as an attempt
+  noBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if(toastShown) return;
+    noAttempts++;
+    placeNoRandom();
+    checkNoToast();
+  });
+
+  noBtn.addEventListener('click', () => {
+    if(toastShown) return;
+    noAttempts++;
+    placeNoRandom();
+    checkNoToast();
+  });
+
+  function checkNoToast() {
+    if(noAttempts >= 3) {
+      toastShown = true;
+      noBtn.style.display = 'none';
+      showToast("maybe \u201cno\u201d doesn't want to be clicked \uD83D\uDE14<br>Sad for you, you have no option left but to play my game \uD83D\uDE0F");
+    }
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.innerHTML = msg;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 4000);
+  }
+
+  function answerYes() {
+    current++;
+    progressBar.style.width = (current / questions.length * 100) + '%';
+    if(current < questions.length) {
+      // Animate out then in
+      const card = document.getElementById('card');
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.95) translateY(-10px)';
+      setTimeout(() => {
+        showQuestion(current);
+        card.style.opacity = '1';
+        card.style.transform = 'scale(1) translateY(0)';
+      }, 300);
+    } else {
+      // Go to final question
+      document.body.style.transition = 'opacity 0.6s';
+      document.body.style.opacity = '0';
+      setTimeout(()=>{ window.location.href='final.html'; }, 600);
+    }
+  }
+
+  // Init
+  showQuestion(0);
+</script>
+</body>
+</html>
